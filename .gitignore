@@ -1,0 +1,35 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Package managers
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+.env
+.env.*
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Data and report artifacts
+data/
+reports/
+mlruns/
+models/
+*.csv
+!*.dvc
+*.json
+
+# OS files
+.DS_Store
+Thumbs.db
