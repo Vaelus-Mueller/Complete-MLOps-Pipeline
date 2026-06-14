@@ -1,8 +1,11 @@
+import os
 import mlflow
 import pandas as pd
 
 
 def find_best_run(experiment_name: str, primary_metric: str = 'f1_score'):
+    os.environ.setdefault('MLFLOW_ALLOW_FILE_STORE', 'true')
+    mlflow.set_tracking_uri('mlruns')
     client = mlflow.tracking.MlflowClient()
     experiment = client.get_experiment_by_name(experiment_name)
     if experiment is None:
