@@ -20,7 +20,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Pull dataset with DVC
-        run: dvc pull
+        run: dvc pull -f
       - name: Run tests
         run: pytest tests/ -v
 
@@ -38,7 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Pull dataset with DVC
-        run: dvc pull
+        run: dvc pull -f
       - name: Train model and verify thresholds
         run: python src/model_training.py --config configs/config.yaml
         env:

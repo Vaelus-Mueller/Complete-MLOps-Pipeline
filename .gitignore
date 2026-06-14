@@ -22,11 +22,11 @@ venv/
 .ipynb_checkpoints/
 
 # Data and report artifacts
-data/
+/data/*
+!/data/**/*.dvc
 reports/
 mlruns/
 models/
-dvc-storage/
 *.csv
 !*.dvc
 *.json
