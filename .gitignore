@@ -26,6 +26,7 @@ data/
 reports/
 mlruns/
 models/
+dvc-storage/
 *.csv
 !*.dvc
 *.json

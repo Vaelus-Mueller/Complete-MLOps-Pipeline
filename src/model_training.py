@@ -1,6 +1,7 @@
 import os
 import joblib
 import mlflow
+import mlflow.sklearn
 import yaml
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -58,13 +59,19 @@ def build_pipeline(config):
 def evaluate_model(model, X_test, y_test, config):
     predictions = model.predict(X_test)
     proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
+    # Normalize labels to binary 0/1 for metric calculations
+    # Create a consistent mapping from label -> integer using y_test values
+    unique = list(pd.Series(y_test).unique())
+    mapping = {label: idx for idx, label in enumerate(unique)}
+    y_true = pd.Series(y_test).map(mapping)
+    y_pred = pd.Series(predictions).map(mapping)
 
     metrics = {
-        'accuracy': accuracy_score(y_test, predictions),
-        'f1_score': f1_score(y_test, predictions, pos_label='>50K' if y_test.dtype == 'object' else 1),
+        'accuracy': accuracy_score(y_true, y_pred),
+        'f1_score': f1_score(y_true, y_pred),
     }
     if proba is not None:
-        metrics['roc_auc'] = roc_auc_score(y_test.map({'<=50K': 0, '>50K': 1}) if y_test.dtype == 'object' else y_test, proba)
+        metrics['roc_auc'] = roc_auc_score(y_true, proba)
     else:
         metrics['roc_auc'] = 0.0
     return metrics
@@ -77,6 +84,8 @@ def save_model(model, path):
 
 
 def log_mlflow_run(config, run_metrics, data_hash):
+    # Allow file-based mlflow stores in local environments
+    os.environ.setdefault('MLFLOW_ALLOW_FILE_STORE', 'true')
     mlflow.set_tracking_uri(config['logging']['mlflow_tracking_uri'])
     mlflow.set_experiment(config['logging']['experiment_name'])
     with mlflow.start_run() as run:
@@ -86,11 +95,30 @@ def log_mlflow_run(config, run_metrics, data_hash):
         mlflow.log_param('data_hash', data_hash)
         for metric_name, metric_value in run_metrics.items():
             mlflow.log_metric(metric_name, float(metric_value))
-        mlflow.log_artifact(config['data']['output_model_path'])
+        # Log the trained sklearn pipeline as an MLflow model
+        try:
+            mlflow.sklearn.log_model(joblib.load(config['data']['output_model_path']), artifact_path='model')
+        except Exception:
+            # fallback: log the file itself
+            mlflow.log_artifact(config['data']['output_model_path'])
         return run.info.run_id
 
 
 def compute_data_hash(df: pd.DataFrame) -> str:
+    # Prefer DVC pointer md5 if available
+    try:
+        dvc_pointer = os.path.splitext('data/' + os.path.basename(df.attrs.get('__source__', 'adult.csv')))[0] + '.csv.dvc'
+    except Exception:
+        dvc_pointer = 'data/adult.csv.dvc'
+    if os.path.exists(dvc_pointer):
+        try:
+            with open(dvc_pointer, 'r') as f:
+                for line in f:
+                    if 'md5:' in line:
+                        return line.split('md5:')[1].strip()
+        except Exception:
+            pass
+    # Fallback: simple hash of columns + sample rows
     return str(hash(tuple(df.columns.tolist())) + hash(tuple(df.head(5).to_numpy().flatten())))
 
 

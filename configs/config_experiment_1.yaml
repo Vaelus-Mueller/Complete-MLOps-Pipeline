@@ -1,0 +1,42 @@
+data:
+  drift_report_path: reports/drift_report.html
+  drift_threshold: 0.25
+  output_model_path: models/adult_income_model.joblib
+  production_path: data/adult_production.csv
+  raw_path: data/adult.csv
+  reference_path: data/adult_reference.csv
+  target_column: income
+logging:
+  experiment_name: adult_income_experiment
+  mlflow_tracking_uri: mlruns
+metrics:
+  primary: f1_score
+  thresholds:
+    accuracy: 0.8
+    f1_score: 0.65
+    roc_auc: 0.8
+training:
+  categorical_features:
+  - workclass
+  - education
+  - marital-status
+  - occupation
+  - relationship
+  - race
+  - sex
+  - native-country
+  model_params:
+    C: 0.01
+    class_weight: balanced
+    max_iter: 200
+    solver: lbfgs
+  model_type: logistic_regression
+  numeric_features:
+  - age
+  - fnlwgt
+  - education-num
+  - capital-gain
+  - capital-loss
+  - hours-per-week
+  random_state: 42
+  test_size: 0.2
