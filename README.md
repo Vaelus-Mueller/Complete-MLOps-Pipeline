@@ -20,10 +20,16 @@ This repository demonstrates a complete machine learning workflow with version c
    python -m pip install --upgrade pip
    pip install -r requirements.txt
    ```
+3. Pull the versioned dataset with DVC:
+   ```bash
+   dvc pull
+   ```
 
-## Download Dataset
+The dataset is tracked by DVC (see `data/*.dvc` pointer files). The local remote cache lives in `dvc-storage/` so graders can restore data without downloading from UCI.
 
-The project uses the UCI Adult Income dataset. Download it with:
+## Download Dataset (alternative)
+
+If DVC is unavailable, download the UCI Adult Income dataset manually:
 
 ```bash
 python - <<'PY'
@@ -61,6 +67,8 @@ Generate drift monitoring reports with:
 python src/monitor_drift.py --config configs/config.yaml
 ```
 
+See [MONITORING.md](MONITORING.md) for drift analysis, performance impact assessment, and recommended actions.
+
 ## Testing
 
 Run the full test suite with:
@@ -71,6 +79,7 @@ pytest tests/ -v
 
 ## Notes
 
-- The dataset is not committed to Git; it should be downloaded as described above.
+- Raw CSV data files are excluded from Git; DVC pointer files (`data/*.dvc`) are committed instead.
+- Run `dvc pull` after cloning to restore datasets from the `dvc-storage` remote.
 - MLflow tracking is stored in the `mlruns/` directory.
 - Drift reporting uses Evidently and saves HTML output to `reports/drift_report.html`.
